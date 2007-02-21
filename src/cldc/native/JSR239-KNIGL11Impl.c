@@ -2872,16 +2872,16 @@ Java_com_sun_jsr239_GL10Impl__1glQueryMatrixxOES() {
     KNI_DeclareHandle(exponentHandle);
 
     KNI_GetParameterAsObject(1, mantissaHandle);
-    KNI_GetParameterAsObject(3, exponentHandle);
+    KNI_GetParameterAsObject(2, exponentHandle);
 
 #ifdef GL_OES_query_matrix
     glQueryMatrixxOES(&mantissa[0], &exponent[0]);
     DEBUG_FLUSH_OR_FINISH;
 
-    KNI_SetRawArrayRegion(mantissaHandle, mantissaOffset*sizeof(jint), 
-                          16*sizeof(jint), (const char *)&mantissa[0]);
-    KNI_SetRawArrayRegion(exponentHandle, exponentOffset*sizeof(jint), 
-                          16*sizeof(jint), (const char *)&exponent[0]);
+    KNI_SetRawArrayRegion(mantissaHandle, mantissaOffset, 16*sizeof(jint),
+			  (const char *)&mantissa[0]);
+    KNI_SetRawArrayRegion(exponentHandle, exponentOffset, 16*sizeof(jint),
+			  (const char *)&exponent[0]);
 #endif
 
     KNI_EndHandles();

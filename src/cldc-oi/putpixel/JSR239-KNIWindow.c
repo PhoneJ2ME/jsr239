@@ -27,7 +27,6 @@
 #include <string.h>
 #include <gxj_putpixel.h>
 #include <midp_constants_data.h>
-#include <lcdlf_export.h>
 
 #undef DEBUG
 
@@ -35,13 +34,7 @@
 #include <stdio.h>
 #endif
 
-/**
- * Helper function.
- * Retrieve buffer for the specified graphics.
- *
- * @param graphicshandle   A KNI handle to a graphics object.
- * @return A pointer to the graphics buffer.
- */
+
 static gxj_pixel_type* getGraphicsBuffer(jobject graphicsHandle) {
     gxj_screen_buffer sbuf;
     gxj_screen_buffer* gimg;
@@ -88,7 +81,7 @@ JSR239_getWindowContents(jobject graphicsHandle, JSR239_Pixmap *dst) {
 
         src = (void*)getGraphicsBuffer(graphicsHandle);
 
-        /* IMPL_NOTE: get clip sizes into account. */
+        // IMPL_NOTE: get clip sizes into account
         copyFromScreenBuffer(dst, src, 0, 0, dst->width, dst->height);
     }
 
@@ -129,21 +122,20 @@ JSR239_putWindowContents(jobject graphicsHandle, JSR239_Pixmap *src,
         printf("  src height = %d\n", src->height);
 #endif
 
-        /* IMPL_NOTE: get clip sizes into account. */
+        // IMPL_NOTE: get clip sizes into account
         copyToScreenBuffer(src, src->width, src->height, flipY);
 
-        /* src->screen_buffer is an output of copyToScreenBuffer function. */
+        // src->screen_buffer is output of copyToScreenBuffer function
         s = (void*)src->screen_buffer;
         d = (void*)getGraphicsBuffer(graphicsHandle);
 
-        if ((src->width  > lcdlf_get_screen_width()) || 
-            (src->height > lcdlf_get_screen_height())||
+        if ((src->width > CHAM_WIDTH) || (src->height > CHAM_HEIGHT) ||
             (sizeof(gxj_pixel_type) != 2)) {
 #ifdef DEBUG
         printf("JSR239: offscreen buffer data is incorrect.\n");
 #endif
         } else {
-            /* Source data must be in 16bit 565 format. */
+            // source data should be in 16bit 565 format
             JSR239_memcpy(d, s,
                 src->width * src->height * sizeof(gxj_pixel_type));
         }
