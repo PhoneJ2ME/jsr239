@@ -1662,7 +1662,7 @@ public class GL10Impl implements GL10, GL10Ext {
         qflush();
 
         int[] iparams = new int[length];
-        IglGetBooleanv(pname, iparams, 0, length);
+        IglGetBooleanv(pname, iparams, offset, length);
         for (int i = 0; i < length; i++) {
             params[offset + i] = (iparams[i] == 1);
         }
