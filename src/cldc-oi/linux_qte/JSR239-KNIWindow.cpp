@@ -74,10 +74,9 @@ static QPixmap* getGraphicsBuffer(jobject graphicsHandle) {
 /* Copy MIDP screen buffer */
 
 extern "C"
-void JSR239_getWindowContents(JSR239_Pixmap *dst,
-                              jobject srcGraphicsHandle, 
-                              jint srcWidth, jint srcHeight,
-                              jint deltaHeight) {
+void
+JSR239_getWindowContents(jobject graphicsHandle, jint deltaHeight,
+    JSR239_Pixmap *dst) {
 
     QPixmap* pixmap;
     void* src;
@@ -112,9 +111,8 @@ void JSR239_getWindowContents(JSR239_Pixmap *dst,
         src = (void*)pixmap->scanLine(0);
 
         /* IMPL_NOTE: get clip sizes into account. */
-        copyFromScreenBuffer(dst,
-                             src, srcWidth, srcHeight,
-                             deltaHeight);
+        copyFromScreenBuffer(dst, src, 0, 0, dst->width, dst->height,
+            deltaHeight);
     }
 
 #ifdef DEBUG
@@ -176,7 +174,6 @@ JSR239_putWindowContents(jobject graphicsHandle,
         copyToScreenBuffer(src, delta_height, 
                            clipX, clipY, 
                            clipWidth, clipHeight, 
-                           clipWidth, clipHeight,
                            flipY);
 
         /* src->screen_buffer is an output of copyToScreenBuffer function. */

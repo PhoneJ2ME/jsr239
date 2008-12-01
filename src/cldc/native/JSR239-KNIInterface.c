@@ -105,6 +105,7 @@ initPixelExpansionTable(int *tab, int bits) {
     }
 }
 
+
 /*
  * Return an JSR239_Pixmap that may be used as a back buffer for the
  * window accessed by the given Canvas, GameCanvas, or Graphics.
@@ -251,16 +252,16 @@ CONVERT_565_TO_8888(jshort rgb) {
 
 
 void
-copyFromScreenBuffer(JSR239_Pixmap *dst, 
-                     void *src, int srcWidth, int srcHeight,
+copyFromScreenBuffer(JSR239_Pixmap *dst, void *sbuffer,
+                     int clip_x, int clip_y, int width, int height,
                      int deltaHeight) {
 
     unsigned char *dstPtr;
 #if GET_DEPTH == 16
-    jshort *srcPtr16 = (jshort *)src;
+    jshort *srcPtr16 = (jshort *)sbuffer;
 #endif
 #if GET_DEPTH == 32
-    jint *srcPtr32 = (jint *)src;
+    jint *srcPtr32 = (jint *)sbuffer;
 #endif
 
     int rSize = dst->rSize;
@@ -276,13 +277,6 @@ copyFromScreenBuffer(JSR239_Pixmap *dst,
     int alpha, red, green, blue, pixel;
     int x, y;
 
-    int minWidth  = (srcWidth < dst->width) ? srcWidth : dst->width;
-    int minHeight = (srcHeight < dst->height) ? srcHeight : dst->height;
-
-    if (deltaHeight < 0) {
-        deltaHeight = 0;
-    }
-
 #ifdef DEBUG
     printf("aOffset = %d\n", aOffset);
     printf("rOffset = %d\n", rOffset);
@@ -295,14 +289,14 @@ copyFromScreenBuffer(JSR239_Pixmap *dst,
     printf("bSize = %d\n", bSize);
 #endif
 
-    dstPtr = (unsigned char *)dst->pixels;
-
+    dstPtr = (unsigned char *)dst->pixels +
+        dst->stride*clip_y + dst->pixelBytes*clip_x;
 
     dstPtr += dst->stride * deltaHeight;
-    minHeight -= deltaHeight;   
+    height -= deltaHeight;
 
-    for (y = 0; y < minHeight; y++) {
-        for (x = 0; x < minWidth; x++) {
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
             int argb8888;
 
 #ifdef DEBUG
@@ -384,20 +378,21 @@ copyFromScreenBuffer(JSR239_Pixmap *dst,
                 printf("  new pixel = 0x%x\n", pixel);
             }
 #endif
+
             if (dst->pixelBytes == 2) {
                 *((jshort *)dstPtr + x) = (jshort)pixel;
             } else if (dst->pixelBytes == 4) {
                 *((jint *)dstPtr + x) = pixel;
             } else {
-                printf("  copyFromScreenBuffer: pixelBytes must be 2 or 4!\n");
+                printf("pixelBytes must be 2 or 4!\n");
             }
         }
 
 #if GET_DEPTH == 16
-        srcPtr16 += srcWidth;
+        srcPtr16 += width;
 #endif
 #if GET_DEPTH == 32
-        srcPtr32 += srcWidth;
+        srcPtr32 += width;
 #endif
         dstPtr += dst->stride;
     }
@@ -421,7 +416,6 @@ CONVERT_8888_TO_565(jint argb) {
 void
 copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight, 
                    jint clipX, jint clipY, jint clipWidth, jint clipHeight,
-                   jint dstWidth, jint dstHeight,
                    jint flipY) {
 
     jint width = src->width;
@@ -449,10 +443,6 @@ copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight,
     int sstride;
     int x, y;
 
-    if (deltaHeight < 0) {
-        deltaHeight = 0;
-    }
-
 #ifdef DEBUG
     printf("copyToScreenBuffer:\n");
     printf("width = %d\n", width);
@@ -475,8 +465,8 @@ copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight,
     sstride = flipY ? -src->stride : src->stride;
 
     srcPtr += sstride * (clipY == 0 ? deltaHeight : clipY);
-    if (clipY + clipHeight > dstHeight - deltaHeight) {
-        clipHeight = dstHeight - clipY - deltaHeight;
+    if (clipY + clipHeight > height - deltaHeight) {
+        clipHeight = height - clipY - deltaHeight;
     }
 
 #if PUT_DEPTH == 16
@@ -493,7 +483,7 @@ copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight,
             } else if (src->pixelBytes == 4) {
                 pixel = *((jint *)srcPtr + x);
             } else {
-                printf("  copyToScreenBuffer: pixelBytes must be 2 or 4!\n");
+                printf("pixelBytes must be 2 or 4!\n");
             }
 
             alpha = (pixel >> aOffset) & aMask;
@@ -556,10 +546,10 @@ copyToScreenBuffer(JSR239_Pixmap *src, jint deltaHeight,
 
         srcPtr += sstride;
 #if PUT_DEPTH == 16
-        dstPtr16 += dstWidth;
+        dstPtr16 += width;
 #endif
 #if PUT_DEPTH == 32
-        dstPtr32 += dstWidth;
+        dstPtr32 += width;
 #endif
     }
 }

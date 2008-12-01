@@ -79,11 +79,9 @@ class EGL10Impl implements EGL10 {
                                Graphics imageGraphics,
                                int width, int height);
     native void _destroyPixmap(int pixmapPtr);
-    native void _getWindowContents(int pixmapPointer,
-                                   Graphics winGraphics,
-                                   int srcWidth,
-                                   int srcHeight,
-                                   int deltaHeight);
+    native void _getWindowContents(Graphics winGraphics,
+                                   int deltaHeight,
+                                   int pixmapPointer);
     native void _putWindowContents(Graphics target,
                                    int deltaHeight,
                                    int pixmapPointer,
@@ -909,11 +907,8 @@ class EGL10Impl implements EGL10 {
                     deltaHeight = _getFullDisplayHeight() -
                         GameMap.getGraphicsAccess().getGraphicsHeight(targetGraphics);
                 }
-                _getWindowContents(currentDrawSurface.getPixmapPointer(),
-                                   targetGraphics, 
-                                   GameMap.getGraphicsAccess().getGraphicsWidth(targetGraphics),
-                                   GameMap.getGraphicsAccess().getGraphicsHeight(targetGraphics),
-                                   deltaHeight);
+                _getWindowContents(targetGraphics, deltaHeight,
+                                   currentDrawSurface.getPixmapPointer());
             } else {
                 // Do nothing
             }

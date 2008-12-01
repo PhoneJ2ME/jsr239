@@ -1195,22 +1195,19 @@ Java_javax_microedition_khronos_egl_EGL10Impl__1getImagePixmap() {
 KNIEXPORT KNI_RETURNTYPE_VOID
 Java_javax_microedition_khronos_egl_EGL10Impl__1getWindowContents() {
 
-    jint pixmap = KNI_GetParameterAsInt(1);
-    jint srcWidth = KNI_GetParameterAsInt(3);
-    jint srcHeight = KNI_GetParameterAsInt(4);
-    jint deltaHeight = KNI_GetParameterAsInt(5);
+    jint deltaHeight = KNI_GetParameterAsInt(2);
+    jint pixmap = KNI_GetParameterAsInt(3);
 
     KNI_StartHandles(1);
-    KNI_DeclareHandle(srcGraphicsHandle);
-    KNI_GetParameterAsObject(2, srcGraphicsHandle);
+    KNI_DeclareHandle(graphicsHandle);
+    KNI_GetParameterAsObject(1, graphicsHandle);
 
 #ifdef DEBUG
     printf("JSR239_getWindowContents(0x%x) = 0x%x\n", 
 	   graphicsHandle, pixmap);
 #endif
-    JSR239_getWindowContents((JSR239_Pixmap *)pixmap, srcGraphicsHandle, 
-                             srcWidth, srcHeight,
-                             deltaHeight);
+    JSR239_getWindowContents(graphicsHandle, deltaHeight,
+        (JSR239_Pixmap *)pixmap);
 
     KNI_EndHandles();
     KNI_ReturnVoid();
