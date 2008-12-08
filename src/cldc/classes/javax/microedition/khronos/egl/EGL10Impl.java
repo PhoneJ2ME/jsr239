@@ -79,16 +79,12 @@ class EGL10Impl implements EGL10 {
                                Graphics imageGraphics,
                                int width, int height);
     native void _destroyPixmap(int pixmapPtr);
-    native void _getWindowContents(int pixmapPointer,
-                                   Graphics winGraphics,
-                                   int srcWidth,
-                                   int srcHeight,
-                                   int deltaHeight);
+    native void _getWindowContents(Graphics winGraphics,
+                                   int deltaHeight,
+                                   int pixmapPointer);
     native void _putWindowContents(Graphics target,
                                    int deltaHeight,
-                                   int pixmapPointer,
-                                   int clipX, int clipY,
-                                   int clipWidth, int clipHeight);
+                                   int pixmapPointer);
     native int _eglCreateWindowSurface(int display,
                                        int config,
                                        int win,
@@ -127,10 +123,8 @@ class EGL10Impl implements EGL10 {
     native int _eglCopyBuffers(int display,
                                int surface,
                                Graphics target,
-                               int width, int height,                               
-                               int deltaHeight,
-                               int clipX, int clipY, 
-                               int clipWidth, int clipHeight);
+                               int width, int height,
+                               int deltaHeight);
     native int _eglSurfaceAttrib(int display,
                                  int surface,
                                  int attribute,
@@ -415,8 +409,6 @@ class EGL10Impl implements EGL10 {
 	EGLSurfaceImpl surface;
 	int strategy = _getWindowStrategy(winGraphics);
 	if (strategy == STRATEGY_USE_WINDOW) {
-            // IMPL_NOTE: Graphics clipping should be supported for the 
-            // window strategy. It is not implemented now.
 	    int winId = _getWindowNativeID(winGraphics);
 	    int surf =
 		_eglCreateWindowSurface(displayId, configId,
@@ -879,9 +871,7 @@ class EGL10Impl implements EGL10 {
             }
             _putWindowContents(targetGraphics,
                     deltaHeight,
-                    currentDrawSurface.getPixmapPointer(),
-                    targetGraphics.getClipX(), targetGraphics.getClipY(),
-                    targetGraphics.getClipWidth(), targetGraphics.getClipHeight());
+                    currentDrawSurface.getPixmapPointer());
         } else {
             // Do nothing
         }
@@ -909,11 +899,8 @@ class EGL10Impl implements EGL10 {
                     deltaHeight = _getFullDisplayHeight() -
                         GameMap.getGraphicsAccess().getGraphicsHeight(targetGraphics);
                 }
-                _getWindowContents(currentDrawSurface.getPixmapPointer(),
-                                   targetGraphics, 
-                                   GameMap.getGraphicsAccess().getGraphicsWidth(targetGraphics),
-                                   GameMap.getGraphicsAccess().getGraphicsHeight(targetGraphics),
-                                   deltaHeight);
+                _getWindowContents(targetGraphics, deltaHeight,
+                                   currentDrawSurface.getPixmapPointer());
             } else {
                 // Do nothing
             }
@@ -1011,9 +998,7 @@ class EGL10Impl implements EGL10 {
             retval = EGL_TRUE ==
                 _eglCopyBuffers(((EGLDisplayImpl)display).nativeId(),
                         surf.nativeId(), imageGraphics,
-                        surf.getWidth(), surf.getHeight(), deltaHeight,
-                        imageGraphics.getClipX(), imageGraphics.getClipY(),
-                        imageGraphics.getClipWidth(), imageGraphics.getClipHeight());
+                        surf.getWidth(), surf.getHeight(), deltaHeight);
         } catch(OutOfMemoryError e) {
             _garbageCollect(false);
 
@@ -1021,18 +1006,14 @@ class EGL10Impl implements EGL10 {
                 retval = EGL_TRUE ==
                     _eglCopyBuffers(((EGLDisplayImpl)display).nativeId(),
                             surf.nativeId(), imageGraphics,
-                            surf.getWidth(), surf.getHeight(), deltaHeight,
-                            imageGraphics.getClipX(), imageGraphics.getClipY(),
-                            imageGraphics.getClipWidth(), imageGraphics.getClipHeight());
+                            surf.getWidth(), surf.getHeight(), deltaHeight);
             } catch(OutOfMemoryError e2) {
                 _garbageCollect(true);
 
                 retval = EGL_TRUE ==
                     _eglCopyBuffers(((EGLDisplayImpl)display).nativeId(),
                             surf.nativeId(), imageGraphics,
-                            surf.getWidth(), surf.getHeight(), deltaHeight,
-                            imageGraphics.getClipX(), imageGraphics.getClipY(),
-                            imageGraphics.getClipWidth(), imageGraphics.getClipHeight());
+                            surf.getWidth(), surf.getHeight(), deltaHeight);
             }
         }
         return retval;
